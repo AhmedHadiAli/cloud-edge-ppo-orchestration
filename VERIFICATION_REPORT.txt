@@ -1,0 +1,19 @@
+REPOSITORY VERIFICATION PASSED
+[PASS] 2 devices
+[PASS] 2 edge servers
+[PASS] cloud capacity 420 GFLOPS
+[PASS] 100 training episodes
+[PASS] 30 ablation episodes
+[PASS] 10 evaluation seeds
+[PASS] 240 raw rows | 240
+[PASS] 400 training-history rows | 400
+[PASS] four scenarios in history
+[PASS] 10 seeds per ablation variant
+[PASS] summary columns match
+[PASS] summary regenerates from raw results | max diff=8.526512829121202e-14
+[PASS] statistics keys match
+[PASS] Wilcoxon/Holm results regenerate | max diff=0.0
+[PASS] ablation summary regenerates | max diff=2.842170943040401e-14
+[PASS] checkpoint result keys match
+[PASS] checkpoints reproduce stored raw results | max diff=4.547473508864641e-13
+Checks passed: 17/17
