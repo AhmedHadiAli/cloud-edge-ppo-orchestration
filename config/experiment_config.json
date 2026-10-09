@@ -1,57 +1,124 @@
 {
   "params": {
-    "num_devices": 2,
-    "num_edge_servers": 2,
+    "num_devices": 4,
+    "num_edge_servers": 3,
     "device_caps_gflops": [
-      10.0,
-      14.0,
-      18.0,
-      22.0
+      20.0,
+      24.0,
+      28.0,
+      32.0
     ],
     "edge_caps_gflops": [
-      25.0,
-      40.0,
-      70.0,
-      100.0
+      36.0,
+      48.0,
+      60.0
     ],
-    "cloud_cap_gflops": 420.0,
+    "cloud_cap_gflops": 120.0,
     "device_power_active_w": 3.5,
-    "device_power_idle_w": 0.6,
-    "device_tx_power_w": 1.6,
-    "edge_power_active_w": 65.0,
-    "cloud_power_active_w": 220.0,
-    "device_battery_j": 320.0,
-    "bw_device_edge_mbps": 60.0,
-    "bw_device_cloud_mbps": 45.0,
-    "latency_device_edge_ms": 8.0,
-    "latency_device_cloud_ms": 55.0,
-    "arrival_rate_tasks_s": 12.0,
+    "device_tx_power_w": 1.4,
+    "nominal_battery_j": 120.0,
+    "energy_scenario_budgets_j": [
+      24.0,
+      28.0,
+      32.0,
+      36.0
+    ],
+    "bw_device_edge_mbps": 90.0,
+    "bw_device_cloud_mbps": 75.0,
+    "latency_device_edge_ms": 12.0,
+    "latency_device_cloud_ms": 42.0,
+    "arrival_rate_tasks_s": 16.0,
+    "horizon_s": 45.0,
     "input_size_mean_mb": 0.75,
     "input_size_std_mb": 0.2,
     "complexity_mean": 0.9,
     "complexity_std": 0.18,
-    "deadline_mean_ms": 650.0,
-    "deadline_std_ms": 130.0,
-    "model_name": "resnet50",
-    "max_tasks": 120
+    "deadline_mean_ms": 250.0,
+    "deadline_std_ms": 65.0,
+    "network_bw_jitter_sd": 0.08,
+    "network_latency_jitter_sd": 0.05,
+    "model_name": "resnet50"
   },
-  "training_episodes": 100,
-  "ablation_episodes": 30,
-  "training_seed_bases": {
-    "normal": 100,
-    "burst": 300,
-    "fluctuation": 500,
-    "energy_constrained": 700
-  },
-  "ablation_training_seed_bases": {
-    "Full PPO": 2000,
-    "Fixed weights": 2200,
-    "No partitioning": 2400,
-    "No quantization": 2600
-  },
-  "validation_seed_offsets": [
-    10000,
-    10001
+  "scenarios": [
+    "normal",
+    "burst",
+    "fluctuation",
+    "energy"
+  ],
+  "actions": [
+    {
+      "name": "local-fp32",
+      "target": "local",
+      "target_index": null,
+      "partition_fraction": 1.0,
+      "quant_bits": 32
+    },
+    {
+      "name": "edge-1-full-fp32",
+      "target": "edge",
+      "target_index": 0,
+      "partition_fraction": 0.0,
+      "quant_bits": 32
+    },
+    {
+      "name": "edge-1-split-fp16",
+      "target": "edge",
+      "target_index": 0,
+      "partition_fraction": 0.45,
+      "quant_bits": 16
+    },
+    {
+      "name": "edge-2-full-fp32",
+      "target": "edge",
+      "target_index": 1,
+      "partition_fraction": 0.0,
+      "quant_bits": 32
+    },
+    {
+      "name": "edge-2-split-fp16",
+      "target": "edge",
+      "target_index": 1,
+      "partition_fraction": 0.45,
+      "quant_bits": 16
+    },
+    {
+      "name": "edge-3-full-fp32",
+      "target": "edge",
+      "target_index": 2,
+      "partition_fraction": 0.0,
+      "quant_bits": 32
+    },
+    {
+      "name": "edge-3-split-fp16",
+      "target": "edge",
+      "target_index": 2,
+      "partition_fraction": 0.45,
+      "quant_bits": 16
+    },
+    {
+      "name": "cloud-full-fp32",
+      "target": "cloud",
+      "target_index": null,
+      "partition_fraction": 0.0,
+      "quant_bits": 32
+    },
+    {
+      "name": "cloud-split-fp16",
+      "target": "cloud",
+      "target_index": null,
+      "partition_fraction": 0.65,
+      "quant_bits": 16
+    }
+  ],
+  "ppo_training_seeds": [
+    42,
+    142,
+    242
+  ],
+  "dqn_training_seeds": [
+    123,
+    223,
+    323
   ],
   "evaluation_seeds": [
     1000,
@@ -63,6 +130,51 @@
     1006,
     1007,
     1008,
-    1009
-  ]
+    1009,
+    1010,
+    1011,
+    1012,
+    1013,
+    1014,
+    1015,
+    1016,
+    1017,
+    1018,
+    1019
+  ],
+  "constant_validation_seeds": [
+    7000,
+    7001,
+    7002,
+    7003,
+    7004
+  ],
+  "sensitivity_seeds": [
+    1100,
+    1101,
+    1102,
+    1103,
+    1104
+  ],
+  "ppo_fine_tuning_episodes": 32,
+  "dqn_training_episodes": 32,
+  "ppo_behavior_clone_samples": 20000,
+  "ppo_behavior_clone_epochs": 20,
+  "reward": {
+    "latency_weight": 0.55,
+    "energy_weight": 0.25,
+    "quality_weight": 0.2,
+    "deadline_violation_penalty": 1.0,
+    "infeasible_energy_penalty": 3.0,
+    "latency_normalizer": "task deadline",
+    "energy_normalizer_j": 0.8,
+    "quality_degradation_normalizer": 0.02,
+    "energy_pressure": "1 + 6(1-battery_ratio)^2"
+  },
+  "software": {
+    "python": "3.13.5",
+    "torch": "2.10.0+cpu",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3"
+  }
 }
