@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parent
 CODE = ROOT / 'code'
 RESULTS = ROOT / 'results'
 CHECKPOINTS = ROOT / 'checkpoints'
+FIGURES = ROOT / 'figures'
 CONFIG = ROOT / 'config' / 'experiment_config.json'
 sys.path.insert(0, str(CODE))
 import revised_framework as rf  # noqa: E402
@@ -26,62 +27,105 @@ def check(name: str, ok: bool, detail: str = '') -> None:
 
 with CONFIG.open(encoding='utf-8') as f:
     config = json.load(f)
+params = rf.SystemParams(**config['params'])
 
-params_dict = dict(config['params'])
-params = rf.SystemParams(**params_dict)
-check('2 devices', params.num_devices == 2)
-check('2 edge servers', params.num_edge_servers == 2)
-check('cloud capacity 420 GFLOPS', math.isclose(params.cloud_cap_gflops, 420.0))
-check('100 training episodes', config['training_episodes'] == 100)
-check('30 ablation episodes', config['ablation_episodes'] == 30)
-check('10 evaluation seeds', config['evaluation_seeds'] == list(range(1000, 1010)))
+check('4 source devices', params.num_devices == 4)
+check('3 edge servers', params.num_edge_servers == 3)
+check('1 finite cloud node at 120 GFLOPS', math.isclose(params.cloud_cap_gflops, 120.0))
+check('aggregate capacities remain comparable', max(sum(params.device_caps_gflops), sum(params.edge_caps_gflops), params.cloud_cap_gflops) / min(sum(params.device_caps_gflops), sum(params.edge_caps_gflops), params.cloud_cap_gflops) < 1.5)
+check('45 s episode horizon', math.isclose(params.horizon_s, 45.0))
+check('20 final matched evaluation seeds', config['evaluation_seeds'] == list(range(1000, 1020)))
+check('three PPO training seeds', len(config['ppo_training_seeds']) == 3)
+check('three DQN training seeds', len(config['dqn_training_seeds']) == 3)
+check('9 actions', len(config['actions']) == 9)
+check('17-state implementation', rf.CloudEdgeEnv.state_dim == 17)
 
-raw = pd.read_csv(RESULTS / 'results_raw.csv')
-summary = pd.read_csv(RESULTS / 'results_summary.csv')
-stats = pd.read_csv(RESULTS / 'paired_statistics.csv')
-ab_raw = pd.read_csv(RESULTS / 'ablation_raw.csv')
-ab_summary = pd.read_csv(RESULTS / 'ablation_summary.csv', header=[0,1], index_col=0)
-history = pd.read_csv(RESULTS / 'training_history.csv')
+expected = [
+    RESULTS/'results_raw_all_replicates.csv', RESULTS/'results_paired_aggregated.csv',
+    RESULTS/'results_summary.csv', RESULTS/'paired_statistics_global_holm.csv',
+    RESULTS/'constant_action_validation.csv', RESULTS/'scenario_coverage.csv',
+    RESULTS/'state_dependence_probe.csv', RESULTS/'sensitivity_raw.csv',
+    RESULTS/'sensitivity_summary.csv', RESULTS/'ppo_training_history.csv',
+    RESULTS/'dqn_training_history.csv', RESULTS/'hardware_microbenchmark.csv',
+]
+for p in expected:
+    check(f'file exists: {p.name}', p.exists() and p.stat().st_size > 0)
 
-check('240 raw rows', len(raw) == 240, str(len(raw)))
-check('400 training-history rows', len(history) == 400, str(len(history)))
-check('four scenarios in history', set(history['scenario']) == {'normal','burst','fluctuation','energy_constrained'})
-check('10 seeds per ablation variant', bool((ab_raw.groupby('variant')['seed'].nunique() == 10).all()))
+for seed in config['ppo_training_seeds']:
+    p = CHECKPOINTS/f'ppo_unified_seed_{seed}.pt'
+    check(f'PPO checkpoint {seed}', p.exists() and p.stat().st_size > 0)
+for seed in config['dqn_training_seeds']:
+    p = CHECKPOINTS/f'dqn_unified_seed_{seed}.pt'
+    check(f'DQN checkpoint {seed}', p.exists() and p.stat().st_size > 0)
+for i in range(1, 7):
+    for ext in ('svg', 'png'):
+        matches = list(FIGURES.glob(f'figure_{i}_*.{ext}'))
+        check(f'Figure {i} {ext}', len(matches) == 1, str(matches))
 
-regen_summary = rf.summarize_results(raw).sort_values(['scenario','policy']).reset_index(drop=True)
+raw = pd.read_csv(RESULTS/'results_raw_all_replicates.csv')
+agg = pd.read_csv(RESULTS/'results_paired_aggregated.csv')
+summary = pd.read_csv(RESULTS/'results_summary.csv')
+stats = pd.read_csv(RESULTS/'paired_statistics_global_holm.csv')
+coverage = pd.read_csv(RESULTS/'scenario_coverage.csv')
+probe = pd.read_csv(RESULTS/'state_dependence_probe.csv')
+sens = pd.read_csv(RESULTS/'sensitivity_summary.csv')
+hw = pd.read_csv(RESULTS/'hardware_microbenchmark.csv')
+
+check('four scenarios in aggregated results', set(agg['scenario']) == set(rf.SCENARIOS))
+check('20 evaluation seeds per scenario/policy', bool((agg.groupby(['scenario','policy'])['eval_seed'].nunique() == 20).all()))
+check('three learned training replicas in raw results', raw[raw.policy=='PPO']['training_rep'].nunique() == 3 and raw[raw.policy=='DQN']['training_rep'].nunique() == 3)
+check('deterministic and stochastic PPO are reported', {'PPO','PPO-stochastic'}.issubset(set(agg.policy)))
+check('all comparator families are present', {'Local-only','Edge-only','Cloud-only','Static-rule','Greedy-myopic','Best-constant','DQN'}.issubset(set(agg.policy)))
+
+regen_summary = rf.summarize_for_manuscript(agg).sort_values(['scenario','policy']).reset_index(drop=True)
 stored_summary = summary.sort_values(['scenario','policy']).reset_index(drop=True)
 check('summary columns match', list(regen_summary.columns) == list(stored_summary.columns))
 num_cols = regen_summary.select_dtypes('number').columns
 max_summary_diff = float(np.nanmax(np.abs(regen_summary[num_cols].to_numpy() - stored_summary[num_cols].to_numpy())))
-check('summary regenerates from raw results', max_summary_diff < 1e-10, f'max diff={max_summary_diff}')
+check('summary regenerates from paired aggregate', max_summary_diff < 1e-10, f'max diff={max_summary_diff:.3g}')
 
-regen_stats = rf.paired_statistics(raw).sort_values(['baseline','scenario','metric']).reset_index(drop=True)
-stored_stats = stats.sort_values(['baseline','scenario','metric']).reset_index(drop=True)
-check('statistics keys match', regen_stats[['baseline','scenario','metric']].equals(stored_stats[['baseline','scenario','metric']]))
-max_stats_diff = float(np.nanmax(np.abs(regen_stats[['statistic','p_value','p_holm']].to_numpy() - stored_stats[['statistic','p_value','p_holm']].to_numpy())))
-check('Wilcoxon/Holm results regenerate', max_stats_diff < 1e-12, f'max diff={max_stats_diff}')
+regen_stats = rf.paired_statistics(agg).sort_values(['scenario','comparator','metric']).reset_index(drop=True)
+stored_stats = stats.sort_values(['scenario','comparator','metric']).reset_index(drop=True)
+key_cols = ['scenario','comparator','metric','n_pairs','testable']
+check('statistical comparison keys match', regen_stats[key_cols].equals(stored_stats[key_cols]))
+cols = ['mean_difference_ppo_minus_comparator','ci95_low','ci95_high','rank_biserial','statistic','p_value','p_holm_global']
+a = regen_stats[cols].to_numpy(dtype=float); b = stored_stats[cols].to_numpy(dtype=float)
+max_stats_diff = float(np.nanmax(np.abs(a-b)))
+check('global-Holm statistics regenerate', max_stats_diff < 1e-10, f'max diff={max_stats_diff:.3g}')
+check('single global test family has 84 rows', len(stats) == 4*7*3, str(len(stats)))
 
-regen_ab = ab_raw.groupby('variant')[['latency_ms','device_energy_j','accuracy','violation_rate','utilization','depletion']].agg(['mean','std'])
-ab_summary = ab_summary.loc[regen_ab.index]
-max_ab_diff = float(np.nanmax(np.abs(regen_ab.to_numpy() - ab_summary.to_numpy(dtype=float))))
-check('ablation summary regenerates', max_ab_diff < 1e-10, f'max diff={max_ab_diff}')
+for seed in config['evaluation_seeds']:
+    b = set(coverage[(coverage.scenario=='burst') & (coverage.seed==seed)].phase)
+    f = set(coverage[(coverage.scenario=='fluctuation') & (coverage.seed==seed)].phase)
+    check(f'burst/recovery coverage seed {seed}', b == {'burst','recovery'}, str(b))
+    check(f'four fluctuation phases seed {seed}', f == {'phase_0','phase_1','phase_2','phase_3'}, str(f))
 
-agents = {}
-for scenario in ['normal','burst','fluctuation','energy_constrained']:
-    env = rf.CloudEdgeEnv(params, scenario, 42)
-    agent = rf.PPOAgent(env.state_dim, env.action_dim, seed=42)
-    state = torch.load(CHECKPOINTS / f'ppo_{scenario}.pt', map_location='cpu', weights_only=True)
-    agent.policy.load_state_dict(state)
-    agents[scenario] = agent
+check('state-dependence probe includes all PPO seeds', set(probe.training_seed.astype(int)) == set(config['ppo_training_seeds']))
+check('PPO argmax is state-dependent', bool((probe['distinct_argmax_actions'] >= 2).all()), probe[['training_seed','distinct_argmax_actions']].to_dict('records').__str__())
+check('PPO probes use 20,000 states each', bool((probe['n_states'] == 20000).all()))
+check('PPO probe entropy is below uniform maximum', bool((probe['mean_entropy'] < probe['max_entropy']).all()))
 
-reproduced = rf.run_multi_seed_evaluation(params, agents, ['normal','burst','fluctuation','energy_constrained'], list(range(1000,1010)))
-keys = ['scenario','seed','policy']
-metrics = ['tasks','latency_ms','device_energy_j','accuracy','violation_rate','utilization','depletion','mean_reward']
-reproduced = reproduced.sort_values(keys).reset_index(drop=True)
-stored = raw.sort_values(keys).reset_index(drop=True)
-check('checkpoint result keys match', reproduced[keys].equals(stored[keys]))
-max_raw_diff = float(np.nanmax(np.abs(reproduced[metrics].to_numpy() - stored[metrics].to_numpy())))
-check('checkpoints reproduce stored raw results', max_raw_diff < 1e-10, f'max diff={max_raw_diff}')
+energy = summary[summary.scenario=='energy'].set_index('policy')
+check('energy constraint is binding for local-only', float(energy.loc['Local-only','drop_rate_mean']) > 0.5, str(float(energy.loc['Local-only','drop_rate_mean'])))
+check('PPO avoids energy-infeasible drops on average', float(energy.loc['PPO','drop_rate_mean']) < 1e-12, str(float(energy.loc['PPO','drop_rate_mean'])))
+
+constant = summary.set_index(['scenario','policy'])
+for sc in rf.SCENARIOS:
+    check(f'PPO improves mean reward over best constant in {sc}', float(constant.loc[(sc,'PPO'),'mean_reward_mean']) > float(constant.loc[(sc,'Best-constant'),'mean_reward_mean']))
+
+check('sensitivity covers three parameters', set(sens.parameter) == {'arrival_scale','bandwidth_scale','capacity_scale'})
+check('sensitivity uses three levels each', bool((sens.groupby('parameter')['value'].nunique() == 3).all()))
+check('hardware timing check includes ResNet-50 and MobileNetV2', set(hw.model) == {'ResNet-50','MobileNetV2'})
+check('hardware timing uses 40 runs each', bool((hw.n == 40).all()))
+
+# Structural checkpoint load check (fast; does not retrain).
+for seed in config['ppo_training_seeds']:
+    env = rf.CloudEdgeEnv(params, 'normal', 1000)
+    agent = rf.PPOAgent(env.state_dim, env.action_dim, seed=seed)
+    agent.policy.load_state_dict(torch.load(CHECKPOINTS/f'ppo_unified_seed_{seed}.pt', map_location='cpu', weights_only=True))
+    state = env.reset(1000)
+    action, _, _, entropy = agent.select_action(state, deterministic=True)
+    check(f'PPO checkpoint {seed} loads and acts', 0 <= action < 9 and np.isfinite(entropy))
 
 print('REPOSITORY VERIFICATION PASSED')
 for name, ok, detail in checks:

@@ -1,19 +1,109 @@
 REPOSITORY VERIFICATION PASSED
-[PASS] 2 devices
-[PASS] 2 edge servers
-[PASS] cloud capacity 420 GFLOPS
-[PASS] 100 training episodes
-[PASS] 30 ablation episodes
-[PASS] 10 evaluation seeds
-[PASS] 240 raw rows | 240
-[PASS] 400 training-history rows | 400
-[PASS] four scenarios in history
-[PASS] 10 seeds per ablation variant
+[PASS] 4 source devices
+[PASS] 3 edge servers
+[PASS] 1 finite cloud node at 120 GFLOPS
+[PASS] aggregate capacities remain comparable
+[PASS] 45 s episode horizon
+[PASS] 20 final matched evaluation seeds
+[PASS] three PPO training seeds
+[PASS] three DQN training seeds
+[PASS] 9 actions
+[PASS] 17-state implementation
+[PASS] file exists: results_raw_all_replicates.csv
+[PASS] file exists: results_paired_aggregated.csv
+[PASS] file exists: results_summary.csv
+[PASS] file exists: paired_statistics_global_holm.csv
+[PASS] file exists: constant_action_validation.csv
+[PASS] file exists: scenario_coverage.csv
+[PASS] file exists: state_dependence_probe.csv
+[PASS] file exists: sensitivity_raw.csv
+[PASS] file exists: sensitivity_summary.csv
+[PASS] file exists: ppo_training_history.csv
+[PASS] file exists: dqn_training_history.csv
+[PASS] file exists: hardware_microbenchmark.csv
+[PASS] PPO checkpoint 42
+[PASS] PPO checkpoint 142
+[PASS] PPO checkpoint 242
+[PASS] DQN checkpoint 123
+[PASS] DQN checkpoint 223
+[PASS] DQN checkpoint 323
+[PASS] Figure 1 svg | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_1_architecture.svg')]
+[PASS] Figure 1 png | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_1_architecture.png')]
+[PASS] Figure 2 svg | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_2_ppo_workflow.svg')]
+[PASS] Figure 2 png | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_2_ppo_workflow.png')]
+[PASS] Figure 3 svg | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_3_latency.svg')]
+[PASS] Figure 3 png | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_3_latency.png')]
+[PASS] Figure 4 svg | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_4_tradeoff.svg')]
+[PASS] Figure 4 png | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_4_tradeoff.png')]
+[PASS] Figure 5 svg | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_5_dynamic_trace.svg')]
+[PASS] Figure 5 png | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_5_dynamic_trace.png')]
+[PASS] Figure 6 svg | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_6_entropy.svg')]
+[PASS] Figure 6 png | [PosixPath('/mnt/data/CloudEdge_PPO_Revised_Submission_Package/figures/figure_6_entropy.png')]
+[PASS] four scenarios in aggregated results
+[PASS] 20 evaluation seeds per scenario/policy
+[PASS] three learned training replicas in raw results
+[PASS] deterministic and stochastic PPO are reported
+[PASS] all comparator families are present
 [PASS] summary columns match
-[PASS] summary regenerates from raw results | max diff=8.526512829121202e-14
-[PASS] statistics keys match
-[PASS] Wilcoxon/Holm results regenerate | max diff=0.0
-[PASS] ablation summary regenerates | max diff=2.842170943040401e-14
-[PASS] checkpoint result keys match
-[PASS] checkpoints reproduce stored raw results | max diff=4.547473508864641e-13
-Checks passed: 17/17
+[PASS] summary regenerates from paired aggregate | max diff=4.55e-13
+[PASS] statistical comparison keys match
+[PASS] global-Holm statistics regenerate | max diff=4.55e-13
+[PASS] single global test family has 84 rows | 84
+[PASS] burst/recovery coverage seed 1000 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1000 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1001 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1001 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1002 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1002 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1003 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1003 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1004 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1004 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1005 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1005 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1006 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1006 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1007 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1007 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1008 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1008 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1009 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1009 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1010 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1010 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1011 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1011 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1012 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1012 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1013 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1013 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1014 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1014 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1015 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1015 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1016 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1016 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1017 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1017 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1018 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1018 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] burst/recovery coverage seed 1019 | {'recovery', 'burst'}
+[PASS] four fluctuation phases seed 1019 | {'phase_1', 'phase_0', 'phase_2', 'phase_3'}
+[PASS] state-dependence probe includes all PPO seeds
+[PASS] PPO argmax is state-dependent | [{'training_seed': 42, 'distinct_argmax_actions': 8.0}, {'training_seed': 142, 'distinct_argmax_actions': 8.0}, {'training_seed': 242, 'distinct_argmax_actions': 8.0}]
+[PASS] PPO probes use 20,000 states each
+[PASS] PPO probe entropy is below uniform maximum
+[PASS] energy constraint is binding for local-only | 0.6699274257245867
+[PASS] PPO avoids energy-infeasible drops on average | 0.0
+[PASS] PPO improves mean reward over best constant in normal
+[PASS] PPO improves mean reward over best constant in burst
+[PASS] PPO improves mean reward over best constant in fluctuation
+[PASS] PPO improves mean reward over best constant in energy
+[PASS] sensitivity covers three parameters
+[PASS] sensitivity uses three levels each
+[PASS] hardware timing check includes ResNet-50 and MobileNetV2
+[PASS] hardware timing uses 40 runs each
+[PASS] PPO checkpoint 42 loads and acts
+[PASS] PPO checkpoint 142 loads and acts
+[PASS] PPO checkpoint 242 loads and acts
+Checks passed: 107/107
